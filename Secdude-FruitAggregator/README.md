@@ -15,7 +15,7 @@ the fruits it absorbed.
 
 | Piece | File | Responsibility |
 |-------|------|----------------|
-| Config | `scripts/mod_config.gd` | Every tunable + every vanilla-coupling point, in one place |
+| Config | `scripts/fruit_config.gd` | Every tunable + every vanilla-coupling point, in one place |
 | Spatial hash grid | `scripts/spatial_hash_grid.gd` | O(n) neighbour lookup (no game knowledge) |
 | Merge service | `scripts/fruit_merge_service.gd` | Pure value math with overflow / negative guards |
 | Aggregator node | `scripts/fruit_aggregator.gd` | Throttled merge loop, wires the pieces together |
@@ -72,7 +72,7 @@ the fruits it absorbed.
   and a fruit can never merge with itself or a fruit already consumed this pass.
 - `MAX_MERGES_PER_TICK` bounds the work per pass so a huge pile can't spike a
   single frame.
-- **Fail-safe:** every uncertain vanilla symbol is isolated in `mod_config.gd`.
+- **Fail-safe:** every uncertain vanilla symbol is isolated in `fruit_config.gd`.
   If a symbol is wrong the mod does *less*, it does not crash — see below.
 
 ---
@@ -104,7 +104,7 @@ values against a decompiled copy of your game version before shipping:
      differ, rename the override in the extension to match exactly.
 3. **Effect replay (recommended).** In that same file, find how `consume`
    applies the fruit's effect to the player (grep for `effects`, `RunData`, or
-   `apply`). Set `EFFECT_APPLY_METHOD` in `mod_config.gd` to that method's name.
+   `apply`). Set `EFFECT_APPLY_METHOD` in `fruit_config.gd` to that method's name.
    It **must apply effects only and must not free the node.** This gives full
    stat parity (`consumable_heal` etc.).
    - If you leave it `""`, the mod falls back to a raw heal: set `HEAL_FIELD`
@@ -123,7 +123,7 @@ aggregator) does not change.
 
 ## Configuration
 
-All in `scripts/mod_config.gd`:
+All in `scripts/fruit_config.gd`:
 
 | Setting | Default | Meaning |
 |---------|---------|---------|

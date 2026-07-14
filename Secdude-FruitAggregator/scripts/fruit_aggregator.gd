@@ -10,39 +10,40 @@ extends Node
 # *where* fruits are (SpatialHashGrid) - it only wires those pieces together.
 # =============================================================================
 
-const Config = preload("res://mods-unpacked/Secdude-FruitAggregator/scripts/mod_config.gd")
+const Config = preload("res://mods-unpacked/Secdude-FruitAggregator/scripts/fruit_config.gd")
 const SpatialHashGrid = preload("res://mods-unpacked/Secdude-FruitAggregator/scripts/spatial_hash_grid.gd")
 
 var _grid
 var _accum: float = 0.0
 
 func _ready() -> void:
-	_grid = SpatialHashGrid.new(Config.MERGE_RADIUS)
+	_grid = SpatialHashGrid.new(Config.merge_radius())
 	set_process(true)
 
 func _process(delta: float) -> void:
 	# Throttle: run a pass at most every SCAN_INTERVAL seconds, not per frame.
 	_accum += delta
-	if _accum < Config.SCAN_INTERVAL:
+	if _accum < Config.scan_interval():
 		return
 	_accum = 0.0
 	_merge_pass()
 
 func _merge_pass() -> void:
 	var fruits := _collect_fruits()
-	if fruits.size() < Config.MIN_FRUITS_TO_MERGE:
+	if fruits.size() < Config.min_fruits_to_merge():
 		return  # early / mid game: not worth the work
 
 	_grid.clear()
 	for f in fruits:
 		_grid.insert(f, f.global_position)
 
-	var radius_sq := Config.MERGE_RADIUS * Config.MERGE_RADIUS
+	var current_merge_radius: float = Config.merge_radius()
+	var radius_sq: float = current_merge_radius * current_merge_radius
 	var consumed := {}   # instance_id -> true, fruits already merged this pass
 	var merges := 0
 
 	for a in fruits:
-		if merges >= Config.MAX_MERGES_PER_TICK:
+		if merges >= Config.max_merges_per_tick():
 			break
 		var a_id = a.get_instance_id()
 		if consumed.has(a_id):
@@ -65,7 +66,7 @@ func _merge_pass() -> void:
 			_merge(a, b)
 			consumed[b_id] = true
 			merges += 1
-			if merges >= Config.MAX_MERGES_PER_TICK:
+			if merges >= Config.max_merges_per_tick():
 				break
 
 # Consumables register themselves into MOD_GROUP (unconditionally, since their

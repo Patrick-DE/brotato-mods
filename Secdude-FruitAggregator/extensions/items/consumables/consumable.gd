@@ -26,13 +26,12 @@ extends "res://items/consumables/consumable.gd"
 #     value is never lost and nothing crashes.
 # =============================================================================
 
-const Config = preload("res://mods-unpacked/Secdude-FruitAggregator/scripts/mod_config.gd")
+const Config = preload("res://mods-unpacked/Secdude-FruitAggregator/scripts/fruit_config.gd")
 const MergeService = preload("res://mods-unpacked/Secdude-FruitAggregator/scripts/fruit_merge_service.gd")
 
 var merge_count: int = 0   # how many fruits were merged into this one (>= 0)
 
 func _ready() -> void:
-	._ready()
 	# Unconditional: data may still be null here. Cheap, and the aggregator
 	# filters by is_mergeable() at scan time.
 	add_to_group(Config.MOD_GROUP)

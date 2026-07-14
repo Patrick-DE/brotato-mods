@@ -1,0 +1,32 @@
+{
+	"name": "SharingIsCaring",
+	"namespace": "Zat",
+	"version_number": "0.0.1",
+	"description": "This mod allows distributing all materials across all players equally when entering the shop. Settings are configurable.",
+	"website_url": "",
+	"dependencies": [
+	],
+	"extra": {
+		"godot": {
+			"optional_dependencies": ["dami-ModOptions"],
+			"incompatibilities": [
+
+			],
+			"authors": ["Zat"],
+			"compatible_mod_loader_version": ["6.2.0"],
+			"compatible_game_version": ["1.1.4.0"],
+			"config_defaults": {},
+			"config_schema": {
+				"title": "Config_sharing_materials",
+				"description": "Config for shared materials",
+				"type": "object",
+				"properties": {
+					"SHARE_MATERIALS": {
+						"type": "boolean",
+						"default": true
+					}
+				}
+			}
+		}
+	}
+}

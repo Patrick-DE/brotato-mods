@@ -1,0 +1,55 @@
+﻿{
+  "name": "TradeMod",
+  "namespace": "ZloiDed",
+  "version_number": "1.2.0",
+  "description": "RU: TradeMod 1.2.0 — переработанная версия мода Zeerck и RobocrafterLP (оригинал сейчас работает некорректно). Добавляет передачу предметов и оружия между игроками, а также опциональную комиссию и передачу денег. Поддерживается и протестирован на Brotato 1.1.14.5 (Paws & Claws).\n\nEN: TradeMod 1.2.0 is a reworked version based on Zeerck's and RobocrafterLP's mod (the original currently works incorrectly). Adds item and weapon trading between players, plus optional fee and money transfer features. Supported and tested on Brotato 1.1.14.5 (Paws & Claws).",
+  "website_url": "",
+  "dependencies": [],
+  "extra": {
+    "godot": {
+      "optional_dependencies": [
+        "dami-ModOptions"
+      ],
+      "incompatibilities": [],
+      "authors": [
+        "ZloiDed",
+        "Zeerck",
+        "RobocrafterLP"
+      ],
+      "compatible_mod_loader_version": [
+        "6.2.0"
+      ],
+      "compatible_game_version": [
+        "1.1.14.5+"
+      ],
+      "config_defaults": {
+        "TRADE_ITEMS_OVER_LIMIT": true,
+        "TRADE_FEE_ENABLED": true,
+        "TRADE_MONEY_ENABLED": true,
+        "TRADE_SELL_ENABLED": true
+      },
+      "config_schema": {
+        "type": "object",
+        "properties": {
+          "TRADE_ITEMS_OVER_LIMIT": {
+            "type": "boolean",
+            "default": true
+          },
+          "TRADE_FEE_ENABLED": {
+            "type": "boolean",
+            "default": true
+          },
+          "TRADE_MONEY_ENABLED": {
+            "type": "boolean",
+            "default": true
+          },
+          "TRADE_SELL_ENABLED": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      }
+    }
+  }
+}
+

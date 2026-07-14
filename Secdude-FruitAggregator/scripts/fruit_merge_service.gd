@@ -14,7 +14,7 @@ extends Reference
 # enforces via MERGE_ONLY_SAME_TYPE.
 # =============================================================================
 
-const Config = preload("res://mods-unpacked/Secdude-FruitAggregator/scripts/mod_config.gd")
+const Config = preload("res://mods-unpacked/Secdude-FruitAggregator/scripts/fruit_config.gd")
 
 # Coerce any external number into a safe, non-negative int. Rejects non-numbers
 # (null, String, etc.), rounds floats (rather than truncating toward zero), and

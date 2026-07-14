@@ -1,0 +1,6 @@
+{
+	"merge_radius": 100.0,
+	"scan_interval": 0.25,
+	"min_fruits_to_merge": 0,
+	"max_merges_per_tick": 60
+}

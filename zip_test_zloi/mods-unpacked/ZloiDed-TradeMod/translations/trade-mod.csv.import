@@ -1,0 +1,19 @@
+﻿[remap]
+
+importer="csv_translation"
+type="Translation"
+
+[deps]
+
+files=[ "res://mods-unpacked/ZloiDed-TradeMod/translations/trade-mod.en.translation", "res://mods-unpacked/ZloiDed-TradeMod/translations/trade-mod.ru.translation" ]
+
+source_file="res://mods-unpacked/ZloiDed-TradeMod/translations/trade-mod.csv"
+dest_files=[ "res://mods-unpacked/ZloiDed-TradeMod/translations/trade-mod.en.translation", "res://mods-unpacked/ZloiDed-TradeMod/translations/trade-mod.ru.translation" ]
+
+[params]
+
+compress=true
+delimiter=0
+
+
+

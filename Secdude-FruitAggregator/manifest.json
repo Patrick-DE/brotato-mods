@@ -18,10 +18,46 @@
 			"compatible_mod_loader_version": [
 				"6.0.0"
 			],
-			"config_schema": {},
-			"config_defaults": {},
 			"optional_dependencies": [],
-			"load_before": []
+			"load_before": [],
+			"config_defaults": {
+				"merge_radius": 100.0,
+				"merge_radius_title": "Merge Radius (px)",
+				"merge_radius_min": 10.0,
+				"merge_radius_max": 500.0,
+				"merge_radius_step": 10.0,
+				"merge_radius_format": "%s",
+				
+				"min_fruits_to_merge": 0.0,
+				"min_fruits_to_merge_title": "Min Fruits to Merge",
+				"min_fruits_to_merge_min": 0.0,
+				"min_fruits_to_merge_max": 100.0,
+				"min_fruits_to_merge_step": 1.0,
+				"min_fruits_to_merge_format": "%s"
+			}
+		}
+	},
+	"config_schema": {
+		"type": "object",
+		"properties": {
+			"merge_radius": {
+				"type": "number",
+				"title": "Merge Radius (px)",
+				"description": "Radius within which fruits merge.",
+				"default": 100.0,
+				"minimum": 10.0,
+				"maximum": 500.0,
+				"multipleOf": 10.0
+			},
+			"min_fruits_to_merge": {
+				"type": "number",
+				"title": "Min Fruits to Merge",
+				"description": "Do nothing until this many fruits exist.",
+				"default": 0,
+				"minimum": 0,
+				"maximum": 100,
+				"multipleOf": 1
+			}
 		}
 	}
 }
