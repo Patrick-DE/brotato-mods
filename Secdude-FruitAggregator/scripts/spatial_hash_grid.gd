@@ -13,6 +13,7 @@ extends Reference
 
 var _cell_size: float
 var _cells: Dictionary = {}   # Vector2 cell-key -> Array of nodes
+var _query_result := []       # Reused array for memory efficiency
 
 func _init(cell_size: float) -> void:
 	_cell_size = max(cell_size, 1.0)
@@ -29,15 +30,16 @@ func insert(node: Object, pos: Vector2) -> void:
 # Returns every node in the 3x3 cell block around `pos`. Callers must still do
 # the exact radius test - this only narrows the candidate set.
 func get_neighbors(pos: Vector2) -> Array:
-	var out := []
+	_query_result.clear()
 	var base := _key(pos)
 	for dx in range(-1, 2):
 		for dy in range(-1, 2):
 			var key := base + Vector2(dx, dy)
 			if _cells.has(key):
-				for node in _cells[key]:
-					out.append(node)
-	return out
+				var cell_nodes = _cells[key]
+				for i in range(cell_nodes.size()):
+					_query_result.append(cell_nodes[i])
+	return _query_result
 
 func _key(pos: Vector2) -> Vector2:
 	return Vector2(floor(pos.x / _cell_size), floor(pos.y / _cell_size))

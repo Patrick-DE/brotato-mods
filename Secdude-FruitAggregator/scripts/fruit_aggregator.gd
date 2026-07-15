@@ -15,6 +15,7 @@ const SpatialHashGrid = preload("res://mods-unpacked/Secdude-FruitAggregator/scr
 
 var _grid
 var _accum: float = 0.0
+var _fruits_buffer := []
 
 func _ready() -> void:
 	_grid = SpatialHashGrid.new(Config.merge_radius())
@@ -29,61 +30,56 @@ func _process(delta: float) -> void:
 	_merge_pass()
 
 func _merge_pass() -> void:
-	var fruits := _collect_fruits()
-	if fruits.size() < Config.min_fruits_to_merge():
+	_collect_fruits()
+	if _fruits_buffer.size() < Config.min_fruits_to_merge():
 		return  # early / mid game: not worth the work
 
 	_grid.clear()
-	for f in fruits:
+	for i in range(_fruits_buffer.size()):
+		var f = _fruits_buffer[i]
 		_grid.insert(f, f.global_position)
 
 	var current_merge_radius: float = Config.merge_radius()
 	var radius_sq: float = current_merge_radius * current_merge_radius
-	var consumed := {}   # instance_id -> true, fruits already merged this pass
+	var max_merges: int = Config.max_merges_per_tick()
 	var merges := 0
 
-	for a in fruits:
-		if merges >= Config.max_merges_per_tick():
+	for i in range(_fruits_buffer.size()):
+		var a = _fruits_buffer[i]
+		if merges >= max_merges:
 			break
-		var a_id = a.get_instance_id()
-		if consumed.has(a_id):
-			continue  # `a` was already absorbed by an earlier survivor
+		if not is_instance_valid(a) or a.is_queued_for_deletion():
+			continue
 
-		# Hoisted out of the inner loop - `a`'s key is constant across neighbours.
 		var a_key = a.get_merge_key() if Config.MERGE_ONLY_SAME_TYPE else ""
+		var a_pos = a.global_position
 
-		for b in _grid.get_neighbors(a.global_position):
-			if not is_instance_valid(b):
-				continue  # freed earlier this pass; grid entry is stale
-			var b_id = b.get_instance_id()
-			if b_id == a_id or consumed.has(b_id):
-				continue  # never merge with self or an already-consumed fruit
+		var neighbors = _grid.get_neighbors(a_pos)
+		for j in range(neighbors.size()):
+			var b = neighbors[j]
+			if not is_instance_valid(b) or b.is_queued_for_deletion() or b == a:
+				continue
 			if Config.MERGE_ONLY_SAME_TYPE and a_key != b.get_merge_key():
 				continue
-			if a.global_position.distance_squared_to(b.global_position) > radius_sq:
+			if a_pos.distance_squared_to(b.global_position) > radius_sq:
 				continue  # exact radius test (squared: avoids a sqrt)
 
 			_merge(a, b)
-			consumed[b_id] = true
 			merges += 1
-			if merges >= Config.max_merges_per_tick():
+			if merges >= max_merges:
 				break
 
 # Consumables register themselves into MOD_GROUP (unconditionally, since their
 # data may be null at _ready). We filter to actually-mergeable fruits HERE, when
 # consumable_data is reliably populated - so crates/loot boxes are excluded and
 # the MIN_FRUITS_TO_MERGE gate counts only real fruits.
-func _collect_fruits() -> Array:
-	var out := []
-	for n in get_tree().get_nodes_in_group(Config.MOD_GROUP):
-		if not is_instance_valid(n):
-			continue
-		if n.is_queued_for_deletion():
-			continue
-		if not n.is_mergeable():
-			continue
-		out.append(n)
-	return out
+func _collect_fruits() -> void:
+	_fruits_buffer.clear()
+	var all_fruits = get_tree().get_nodes_in_group(Config.MOD_GROUP)
+	for i in range(all_fruits.size()):
+		var n = all_fruits[i]
+		if is_instance_valid(n) and not n.is_queued_for_deletion() and n.is_mergeable():
+			_fruits_buffer.append(n)
 
 func _merge(survivor, absorbed) -> void:
 	survivor.absorb(absorbed)   # transfer merge count; guarded inside consumable.gd
