@@ -3,7 +3,7 @@
 	"namespace": "Secdude",
 	"version_number": "1.0.0",
 	"description": "Fast, annoying, and thirsty for blood! The Mosquito is a high-risk, hyper-mobile vampire that thrives in the center of the swarm. It trades raw durability and damage for insane attack speed and self-healing.",
-	"website_url": "https://github.com/Secdude/Brotato-Mosquito",
+	"website_url": "https://github.com/Patrick-DE/brotato-mods/Secdude-Mosquito",
 	"dependencies": [],
 	"extra": {
 		"godot": {

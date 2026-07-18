@@ -3,7 +3,7 @@
 	"namespace": "Secdude",
 	"version_number": "1.0.0",
 	"description": "Merges nearby ground fruits into a single entity to improve late-game performance. Combined fruit keeps the full healing value.",
-	"website_url": "https://github.com/secdude/Brotato-FruitAggregator",
+	"website_url": "https://github.com/Patrick-DE/brotato-mods/Secdude-FruitAggregator",
 	"dependencies": [],
 	"extra": {
 		"godot": {
@@ -27,8 +27,7 @@
 				"merge_radius_max": 500.0,
 				"merge_radius_step": 10.0,
 				"merge_radius_format": "%s",
-				
-				"min_fruits_to_merge": 0.0,
+				"min_fruits_to_merge": 2.0,
 				"min_fruits_to_merge_title": "Min Fruits to Merge",
 				"min_fruits_to_merge_min": 0.0,
 				"min_fruits_to_merge_max": 100.0,
@@ -46,14 +45,14 @@
 				"description": "Radius within which fruits merge.",
 				"default": 100.0,
 				"minimum": 10.0,
-				"maximum": 500.0,
+				"maximum": 1000.0,
 				"multipleOf": 10.0
 			},
 			"min_fruits_to_merge": {
 				"type": "number",
 				"title": "Min Fruits to Merge",
 				"description": "Do nothing until this many fruits exist.",
-				"default": 0,
+				"default": 2,
 				"minimum": 0,
 				"maximum": 100,
 				"multipleOf": 1
