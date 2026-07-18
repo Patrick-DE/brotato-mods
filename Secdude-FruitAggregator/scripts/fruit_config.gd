@@ -27,9 +27,17 @@ static func get_setting(setting_name: String, default_val):
 						if val != null:
 							return val
 
-	var config = ModLoaderConfig.get_current_config(MOD_ID)
-	if config and config.data.has(setting_name):
-		return config.data[setting_name]
+	# ModLoaderConfig fallback - QUIET lookup. get_current_config() logs TWO hard
+	# ERRORs per call ("Mod has no config file." + "No config with name ...") when
+	# the user profile holds no saved config entry for this mod. get_setting() is
+	# polled during gameplay, so that spammed thousands of error lines/sec on
+	# machines without a saved config (e.g. a fresh Steam Deck profile) - the
+	# reported "infinite loop in log". get_configs() returns {} silently instead.
+	var configs = ModLoaderConfig.get_configs(MOD_ID)
+	if configs.has(ModLoaderConfig.DEFAULT_CONFIG_NAME):
+		var config = configs[ModLoaderConfig.DEFAULT_CONFIG_NAME]
+		if config and config.data.has(setting_name):
+			return config.data[setting_name]
 	return default_val
 
 # --- Behaviour tunables (Dynamically fetched from ModOptions) ----------------
@@ -52,18 +60,6 @@ const MAX_MERGE_COUNT: int = 9999        # overflow guard on a fruit's merge cou
 # ITS OWN heal effect once per merged fruit, so all merged fruits must share a
 # type. Turning this off would heal cross-type merges as the survivor's type.
 const MERGE_ONLY_SAME_TYPE: bool = true
-
-# --- Effect replay -----------------------------------------------------------
-# Preferred, stat-faithful path: name the method on the vanilla consumable that
-# applies its effects to the player (find it in your decompiled consumable.gd -
-# grep for 'effects' / 'RunData' / 'apply'). It MUST apply effects only and MUST
-# NOT free the node. Leave "" to use the raw-heal fallback below.       (VERIFY)
-const EFFECT_APPLY_METHOD: String = ""
-
-# --- Fail-safe healing fallback (used only when EFFECT_APPLY_METHOD is "") ----
-const FALLBACK_HEAL: int = 3             # base fruit heal in HP (Brotato wiki)
-const HEAL_FIELD: String = "value"       # ConsumableData heal field      (VERIFY)
-const PLAYER_HEAL_METHOD: String = "heal" # player's heal method name      (VERIFY)
 
 # --- Vanilla coupling --------------------------------------------------------
 # MOD_GROUP is OUR group, created by this mod, so it is always safe. EVERY

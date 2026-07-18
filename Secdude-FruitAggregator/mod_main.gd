@@ -14,9 +14,9 @@ func _init() -> void:
 	ModLoaderMod.install_script_extension(EXT_DIR + "items/consumables/consumable.gd")
 
 func _get_mod_options() -> Node:
-	if not Engine.has_main_loop():
+	if not get_tree():
 		return null
-	var root = Engine.get_main_loop().root
+	var root = get_tree().root
 	if not root:
 		return null
 	var mod_loader = root.get_node_or_null("ModLoader")
@@ -71,8 +71,13 @@ func _register_mod_options() -> void:
 		dami.connect("setting_changed", self, "_on_dami_setting_changed")
 
 func _on_dami_setting_changed(setting_name: String, value, mod_name: String) -> void:
-	if mod_name == MOD_ID:
-		var config = ModLoaderConfig.get_current_config(MOD_ID)
+	if mod_name != MOD_ID:
+		return
+	# Quiet lookup: get_current_config() logs errors when no config exists, and a
+	# slider drag fires this signal rapidly. Only persist when a config is present.
+	var configs = ModLoaderConfig.get_configs(MOD_ID)
+	if configs.has(ModLoaderConfig.DEFAULT_CONFIG_NAME):
+		var config = configs[ModLoaderConfig.DEFAULT_CONFIG_NAME]
 		if config != null:
 			config.data[setting_name] = value
 			config.save_to_file()

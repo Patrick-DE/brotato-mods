@@ -8,33 +8,44 @@ extends "res://items/consumables/consumable.gd"
 # through the player's stats (e.g. `consumable_heal`) - exact parity with eating
 # the fruits one by one.
 #
-# VERIFY these against your decompiled `consumable.gd` - version specific, NOT a
-# public API:
+# VERIFY against your decompiled `res://items/consumables/consumable.gd` (version
+# specific, NOT a public API):
 #   1. This script's `extends` path.
 #   2. `consumable_data` is the ConsumableData instance on the node.
-#   3. The consume/pickup method name + signature (assumed `consume(player)`).
-#   4. Config.EFFECT_APPLY_METHOD (preferred) or Config.PLAYER_HEAL_METHOD +
-#      Config.HEAL_FIELD (fallback).
+#   3. pickup(player_index) is the pickup entry point.
+#   4. RunData.apply_item_effects(consumable_data, player_index) applies effects
+#      (the same call the game makes in main.gd::on_consumable_picked_up).
 #
 # FAIL-SAFE by design:
-#   * consumable_data may be null at _ready (the spawner often assigns it after
-#     the node enters the tree), so we join the merge group UNCONDITIONALLY and
-#     let the aggregator decide mergeability later, when data is populated.
-#   * Replays run BEFORE the vanilla consume that frees the node -> no
+#   * consumable_data may be null at _ready (the spawner assigns it after the
+#     node enters the tree), so we join the merge group UNCONDITIONALLY and let
+#     the aggregator decide mergeability later, when data is populated.
+#   * Replays run BEFORE the vanilla pickup that pools the node -> no
 #     use-after-free.
-#   * If EFFECT_APPLY_METHOD is unset/missing we fall back to a raw heal, so
-#     value is never lost and nothing crashes.
+#   * Consumable nodes are pooled and the pool is SHARED across all consumable
+#     types, so merge_count is reset in drop() (the universal respawn seam) -
+#     otherwise a recycled survivor would replay fruit heals onto an unrelated
+#     consumable (e.g. a reused item box -> duplicated loot).
 # =============================================================================
 
-const Config = preload("res://mods-unpacked/Secdude-FruitAggregator/scripts/fruit_config.gd")
-const MergeService = preload("res://mods-unpacked/Secdude-FruitAggregator/scripts/fruit_merge_service.gd")
+var Config = load("res://mods-unpacked/Secdude-FruitAggregator/scripts/fruit_config.gd")
+var MergeService = load("res://mods-unpacked/Secdude-FruitAggregator/scripts/fruit_merge_service.gd")
 
 var merge_count: int = 0   # how many fruits were merged into this one (>= 0)
 
 func _ready() -> void:
+	._ready()   # vanilla Item._ready() -> reset() (hide, monitorable, physics)
 	# Unconditional: data may still be null here. Cheap, and the aggregator
 	# filters by is_mergeable() at scan time.
 	add_to_group(Config.MOD_GROUP)
+
+# Runs on first spawn AND on every pool reuse (spawn_consumables always calls it).
+# Clears merge state so a recycled node - the consumable pool is shared across
+# ALL consumable types - never carries a stale count into its next life.
+func drop(pos: Vector2, p_rotation: float, p_push_back_destination: Vector2) -> void:
+	merge_count = 0
+	_update_visuals()
+	.drop(pos, p_rotation, p_push_back_destination)
 
 # Stable type id, used to only ever merge identical consumables.
 func get_merge_key() -> String:
@@ -50,16 +61,6 @@ func is_mergeable() -> bool:
 	if key == "":
 		return false
 	return Config.MERGEABLE_TYPE_KEYS.has(key)
-
-# Total HP one fruit heals on its own. Only used by the raw-heal fallback.
-func get_base_heal() -> int:
-	if consumable_data != null:
-		var raw = consumable_data.get(Config.HEAL_FIELD)   # (VERIFY) heal field
-		if raw != null:
-			var parsed := MergeService.sanitize_int(raw)
-			if parsed > 0:
-				return parsed
-	return Config.FALLBACK_HEAL
 
 # Called by the aggregator when `other` is merged into this fruit. Absorbs the
 # other fruit AND anything already merged into it (chain-safe).
@@ -83,17 +84,17 @@ func _update_visuals() -> void:
 		sprite.modulate = c
 
 # --- Consume hook -----------------------------------------------------------
-# VERIFY the signature. We replay this fruit's heal once per merged fruit FIRST
-# (node still alive, so all reads are safe), THEN let vanilla apply the final
-# heal and free the node. Total applications == original fruit count.
+# We replay this fruit's heal once per merged fruit FIRST (node still alive, so
+# all reads are safe), THEN let vanilla apply the final heal and pool the node.
+# Total applications == original fruit count.
 func pickup(player_index: int) -> void:
-	var replays = merge_count
+	var replays := merge_count
 	for _i in range(replays):
 		_replay_heal(player_index)
 	.pickup(player_index)
 
 # The single effect-replay seam. Reproduces ONE fruit's heal without freeing the
-# node. Preferred path reuses vanilla's own effect application (stat-faithful).
+# node by reusing vanilla's own stat-faithful effect application.
 func _replay_heal(player_index: int) -> void:
 	if consumable_data != null:
 		RunData.apply_item_effects(consumable_data, player_index)

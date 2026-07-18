@@ -10,28 +10,51 @@ extends Node
 # *where* fruits are (SpatialHashGrid) - it only wires those pieces together.
 # =============================================================================
 
-const Config = preload("res://mods-unpacked/Secdude-FruitAggregator/scripts/fruit_config.gd")
-const SpatialHashGrid = preload("res://mods-unpacked/Secdude-FruitAggregator/scripts/spatial_hash_grid.gd")
+var Config = load("res://mods-unpacked/Secdude-FruitAggregator/scripts/fruit_config.gd")
+var SpatialHashGrid = load("res://mods-unpacked/Secdude-FruitAggregator/scripts/spatial_hash_grid.gd")
 
 var _grid
 var _accum: float = 0.0
 var _fruits_buffer := []
 
+# Settings are CACHED and refreshed once per merge pass, never per frame. Reading
+# them polls ModOptions (a node-tree walk) + ModLoaderConfig; doing that every
+# frame is wasteful in a performance mod and previously spammed the log. A change
+# made in the options menu takes effect on the next pass (<= scan_interval late).
+var _scan_interval: float = 0.25
+var _merge_radius: float = 100.0
+var _min_fruits: int = 0
+var _max_merges: int = 60
+
 func _ready() -> void:
-	_grid = SpatialHashGrid.new(Config.merge_radius())
+	_refresh_settings()
+	_grid = SpatialHashGrid.new(_merge_radius)
 	set_process(true)
 
 func _process(delta: float) -> void:
-	# Throttle: run a pass at most every SCAN_INTERVAL seconds, not per frame.
+	# Throttle: run a pass at most every scan_interval seconds, not per frame.
 	_accum += delta
-	if _accum < Config.scan_interval():
+	if _accum < _scan_interval:
 		return
 	_accum = 0.0
 	_merge_pass()
+	_refresh_settings()   # apply any options changes for the NEXT pass
+
+func _refresh_settings() -> void:
+	_scan_interval = Config.scan_interval()
+	_min_fruits = Config.min_fruits_to_merge()
+	_max_merges = Config.max_merges_per_tick()
+	var r: float = Config.merge_radius()
+	# INVARIANT: grid cell size must stay >= query radius (see spatial_hash_grid).
+	# If the radius grows at runtime (options menu) the old, smaller cells would
+	# make the 3x3 scan miss valid neighbours, so rebuild the grid on any change.
+	if _grid != null and r != _merge_radius:
+		_grid = SpatialHashGrid.new(r)
+	_merge_radius = r
 
 func _merge_pass() -> void:
 	_collect_fruits()
-	if _fruits_buffer.size() < Config.min_fruits_to_merge():
+	if _fruits_buffer.size() < _min_fruits:
 		return  # early / mid game: not worth the work
 
 	_grid.clear()
@@ -39,14 +62,12 @@ func _merge_pass() -> void:
 		var f = _fruits_buffer[i]
 		_grid.insert(f, f.global_position)
 
-	var current_merge_radius: float = Config.merge_radius()
-	var radius_sq: float = current_merge_radius * current_merge_radius
-	var max_merges: int = Config.max_merges_per_tick()
+	var radius_sq: float = _merge_radius * _merge_radius
 	var merges := 0
 
 	for i in range(_fruits_buffer.size()):
 		var a = _fruits_buffer[i]
-		if merges >= max_merges:
+		if merges >= _max_merges:
 			break
 		if not is_instance_valid(a) or a.is_queued_for_deletion():
 			continue
@@ -66,7 +87,7 @@ func _merge_pass() -> void:
 
 			_merge(a, b)
 			merges += 1
-			if merges >= max_merges:
+			if merges >= _max_merges:
 				break
 
 # Consumables register themselves into MOD_GROUP (unconditionally, since their

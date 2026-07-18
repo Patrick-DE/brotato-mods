@@ -7,7 +7,7 @@ extends "res://main.gd"
 # loop; main.gd itself stays untouched.
 # =============================================================================
 
-const FruitAggregator = preload("res://mods-unpacked/Secdude-FruitAggregator/scripts/fruit_aggregator.gd")
+var FruitAggregator = load("res://mods-unpacked/Secdude-FruitAggregator/scripts/fruit_aggregator.gd")
 
 func _ready() -> void:
 	# Vanilla Main's _ready() is called implicitly before this function.

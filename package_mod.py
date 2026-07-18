@@ -1,11 +1,15 @@
 import os
+import sys
 import zipfile
 
-def create_godot_zip():
-    mod_id = "Secdude-FruitAggregator"
+def create_godot_zip(mod_id):
     zip_filename = f"{mod_id}.zip"
     source_dir = mod_id
     
+    if not os.path.exists(source_dir):
+        print(f"Error: Directory '{source_dir}' does not exist.")
+        return
+        
     if os.path.exists(zip_filename):
         os.remove(zip_filename)
         
@@ -39,4 +43,8 @@ def create_godot_zip():
     print(f"Successfully created Godot-compatible {zip_filename}")
 
 if __name__ == '__main__':
-    create_godot_zip()
+    if len(sys.argv) > 1:
+        for mod in sys.argv[1:]:
+            create_godot_zip(mod)
+    else:
+        print("Usage: python package_mod.py <ModFolder1> <ModFolder2> ...")
